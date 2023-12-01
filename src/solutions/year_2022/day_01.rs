@@ -1,5 +1,7 @@
 use crate::solutions::read_file;
 
+#[allow(dead_code)]
+
 pub fn solve() {
     let lines = read_file("./src/inputs/year_2022/day_01");
 
