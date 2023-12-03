@@ -14,6 +14,20 @@ pub fn solve() {
     println!("------------");
 }
 
+/// Iterate over all input lines first split at ':'. This will separate the 'Game #' part from the 
+/// outcomes. Then split at ';' to get the actual pulls in that game.
+/// 
+/// Next, go through all pulls and split at ',' to get the individual sets of cubes being used.
+/// 
+/// Lastly, split at ' ' to separate the number from the color. Note that the strings start with a
+/// space thus we ignore the first entry when matching.
+/// 
+/// The actual logic is to check the numbers against the known thresholds and if they are exceeded then
+/// we go to the next game. (We labeled the outer for loop for that).
+/// 
+/// Only if all thresholds are obeyed will we get to the part where we add the id of the game to the
+/// overall sum. Remember that indices start at 0 but games start at 1.
+/// 
 fn logic_part_1(input: &Vec<String>) -> u32 {
     let mut sum: usize = 0;
     'outer: for (id, line) in input.iter().enumerate() {
@@ -38,6 +52,9 @@ fn logic_part_1(input: &Vec<String>) -> u32 {
     sum as u32
 }
 
+/// Similar parsing here, the main difference is that we determine the maximum number for each color
+/// for a given game. Thus, with every new game we have to reset the values for red, green, blue.
+/// 
 fn logic_part_2(input: &Vec<String>) -> u32 {
     let mut sum: u32 = 0;
     for line in input {
