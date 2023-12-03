@@ -65,7 +65,7 @@ fn logic_part_2(input: &Vec<String>) -> u32 {
             let cubes = game.split(',');
             for cube in cubes {
                 let config: Vec<&str> = cube.split(' ').collect();
-                println!("{:?}", config);
+                //println!("{:?}", config);
                 match config[..] {
                    [_, number, "blue"] => {blue = max(blue, number.parse::<u32>().unwrap())}
                    [_, number, "red"] => {red = max(red, number.parse::<u32>().unwrap())},
@@ -74,7 +74,7 @@ fn logic_part_2(input: &Vec<String>) -> u32 {
                 }
             }
         }
-        println!("Could have been played with: {} {} {}", red, green, blue);
+        //println!("Could have been played with: {} {} {}", red, green, blue);
         sum+= red * green * blue;
     }
     sum

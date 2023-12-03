@@ -23,11 +23,6 @@ struct NumberPosition {
     end: usize
 }
 
-struct Symbol {
-    symbol: String,
-    counter: u32
-}
-
 fn parse_input(input: &Vec<String>) -> (Vec<NumberPosition>, HashMap<(usize, usize), &str>, Vec<(usize, usize)>) {
     let mut numbers_vec: Vec<NumberPosition> = Vec::new();
     let mut symbol_lookup: HashMap<(usize, usize), &str> = HashMap::new();
@@ -111,12 +106,8 @@ fn logic_part_2 (input: &Vec<String>) -> usize {
             None => continue
         }
     }
-    for entry in holder {
-        if entry.1.len() == 2 {
-            sum += entry.1.iter().product::<usize>()
-        }
-    }
-    sum
+    let result = holder.iter().filter(|(_, vec)| vec.len() == 2).map(|(_, vec)| vec.iter().product::<usize>());
+    result.sum()
 }
 
 #[test]
