@@ -57,38 +57,28 @@ fn logic_part_2 (input: &Vec<String>) -> u32 {
     let (instructions, network) = parse_input(input);
     let mut positions: Vec<String> = network.keys().filter(|key| key.ends_with('A')).map(|c| c.clone()).collect();
     println!("{:?}", positions);
-    let mut cycle_start: Vec<usize>= Vec::new();
-    let mut cycle_lengths: Vec<usize> = Vec::new();
-    for position in &positions {
-        let mut counter: usize = 0;
+    let mut cycle_lengths: Vec<u32> = Vec::new();
+    for position in positions {
         let mut temp_pos = position.clone();
-        let mut z_counter = 0;
-        let mut last_z = 0;
+        let first_pos = position.clone();
         println!("Starting position: {}", position);
-        loop {
+        for counter in (0..100000).into_iter() {
             let index = counter % instructions.len() as usize;
             let instruction = instructions[index] as usize;
             let choices = network.get(&temp_pos).unwrap();
             temp_pos = choices[instruction].clone();
             if temp_pos.ends_with('Z') {
-                z_counter += 1;
-                if z_counter == 2 {
-                    break
-                    cycle_lengths.push(counter - last_z);
-                } else {
-                    println!("{:?}", counter - last_z);
-                    last_z = counter;
-                    cycle_start.push(counter)
-                }
-            } else {
-                counter += 1
+                println!("Position {} at index {}", temp_pos, index);
+                println!("{}", counter);
+                cycle_lengths.push(counter as u32+ 1);
+                break;
             }
         }
 
     }
-        println!("{:?}", cycle_start);
         println!("{:?}", cycle_lengths);
-        let mut pos = cycle_start;
+    determine_result(cycle_lengths) as u32
+    /* 
     loop {
         let mut holder = pos.clone();
         let max = holder.iter().max().unwrap();
@@ -97,8 +87,7 @@ fn logic_part_2 (input: &Vec<String>) -> u32 {
         }
         if pos.iter().all(|x| x == max) {break}
     }
-    println!("{:?}", pos);
-    1
+    */
 }
 
 #[test]
@@ -116,23 +105,12 @@ fn test_example2_input() {
     assert!(result == 6);
 }
 
-#[test]
-fn foo() {
-    let a = (13200, 2149);
-    let b = (20568, 3684);
-    let mut pos = vec![13200, 20568];
-    let increments = vec![2149, 3684];
-    let lcm_calc = lcm(a.1, b.1);
-    println!("{}", a.0 % a.1);
-    println!("{}", b.0 % b.1);
-    println!("{}", lcm_calc);
-    loop {
-        let mut holder = pos.clone();
-        let max = holder.iter().max().unwrap();
-        for (i, p) in holder.iter().enumerate() {
-            if p < max {pos[i] += increments[i]}
-        }
-        if pos.iter().all(|x| x == max) {break}
+fn determine_result(cycle_lengths: Vec<u32>) -> u64 {
+    let mut temp = cycle_lengths.clone().pop().unwrap() as u64;
+    for element in cycle_lengths {
+        println!("{}", temp);
+        temp = lcm(temp, element as u64);
     }
-    println!("{:?}", pos);
+    println!("Final result: {}", temp);
+    temp
 }
