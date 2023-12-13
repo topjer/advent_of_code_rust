@@ -15,66 +15,35 @@ pub fn solve() {
 #[derive(Debug)]
 struct ConditionRecord {
     instructions: Vec<String>,
-    numbers: Vec<usize>
+    numbers: Vec<usize>,
+    memory: HashMap<(Vec<String>, Vec<usize>), usize>
 }
 
 impl ConditionRecord {
-    fn eliminate_known(&mut self) {
-        let mut idx_to_remove: Vec<usize> = Vec::new();
-        for (idx, instruction) in self.instructions.iter().enumerate() {
-            if instruction.chars().all(|x| x == '1') {
-                let temp_len = instruction.len();
-                let temp_pos = self.numbers.iter().position(|x| *x == temp_len).unwrap();
-                self.numbers.remove(temp_pos);
-                idx_to_remove.push(idx);
-            }
-        }
-        idx_to_remove.sort();
-        for element in idx_to_remove.iter().rev() {
-            self.instructions.remove(*element);
-        }
-/* 
-        if self.instructions[0].chars().nth(0).unwrap() == '1' {
-            if self.instructions[0].len() == self.numbers[0] {
-                self.instructions.remove(0);
-            } else {
-                self.instructions[0] = self.instructions[0].chars().skip(self.numbers[0] + 1).collect();
-            }
-            self.numbers.remove(0);
-        }
 
-        if self.instructions.last().chars().rev().nth(0).unwrap() == '1' {
-
-        }
-        */
+fn solve_game(&mut self, instructions: &Vec<String>, numbers: &Vec<usize>) -> usize {
+    if self.memory.contains_key(&(instructions.clone(), numbers.clone())) {
+        return *self.memory.get(&(instructions.clone(), numbers.clone())).unwrap()
     }
-
-    fn possible_combinations(&self) -> usize {
-        if self.instructions.iter().map(|x| x.len()).sum::<usize>() + self.instructions.len() - 1 == self.numbers.iter().sum::<usize>() + self.numbers.len() - 1 {
-            return 1
-        } else {
-            return 0
-        }
-    }
-}
-
-
-fn solve_game(instructions: &Vec<String>, numbers: &Vec<usize>) -> usize {
     // all numbers have been placed
     if numbers.len() == 0 {
         // no more numbers but still fields to fill
         if instructions.iter().any(|x| x.contains('1')) {
+            self.memory.insert((instructions.clone(), numbers.clone()), 0);
             return 0;
         }
+        self.memory.insert((instructions.clone(), numbers.clone()), 1);
         return 1
     }
     // still numbers to place but no room
     if instructions.len() == 0 && numbers.len() > 0 {
+        self.memory.insert((instructions.clone(), numbers.clone()), 0);
         return 0
     }
     // if our numbers do not fit into the possible instructions, just abort
     if instructions.iter().map(|x| x.len()).sum::<usize>() + instructions.len() - 1
          < numbers.iter().sum::<usize>() + numbers.len() - 1 {
+            self.memory.insert((instructions.clone(), numbers.clone()), 0);
             return 0
         }
     // last number fully fits last slot
@@ -85,11 +54,18 @@ fn solve_game(instructions: &Vec<String>, numbers: &Vec<usize>) -> usize {
         temp_n.truncate(temp_n.len()-1);
         // if there is any one in the last instruction, I have to remove my number
         if instructions.last().unwrap().contains('1') {
-            return solve_game(&temp_i, &temp_n)
+            let r1 = self.solve_game(&temp_i, &temp_n);
+            self.memory.insert((temp_i, temp_n), r1);
+            return r1;
         } else {
             // if there is no 1 in the last instruction, also try to fit all numbers in the
             // remaining instructions
-            return solve_game(&temp_i, numbers) + solve_game(&temp_i, &temp_n)
+            let r1 = self.solve_game(&temp_i, numbers);
+            let r2 = self.solve_game(&temp_i, &temp_n);
+            
+            self.memory.insert((temp_i.clone(), numbers.clone()), r1);
+            self.memory.insert((temp_i.clone(), temp_n), r2);
+            return r1 + r2;
         }
     }
     
@@ -98,9 +74,12 @@ fn solve_game(instructions: &Vec<String>, numbers: &Vec<usize>) -> usize {
         let mut temp_i = instructions.clone();
         temp_i.truncate(temp_i.len()-1);
         if instructions.last().unwrap().contains('1') {
+            self.memory.insert((instructions.clone(), numbers.clone()), 0);
             return 0
         } else {
-            return solve_game(&temp_i, numbers) 
+            let r1 = self.solve_game(&temp_i, numbers);
+            self.memory.insert((temp_i, numbers.clone()), r1);
+            return r1;
         }
     }
 
@@ -118,9 +97,12 @@ fn solve_game(instructions: &Vec<String>, numbers: &Vec<usize>) -> usize {
             let last_char = last_instr.pop();
             temp_i.push(last_instr);
             if last_char.unwrap() == '1' {
+                self.memory.insert((instructions.clone(), numbers.clone()), 0);
                 return 0;
             } else {
-                return solve_game(&temp_i, numbers);
+                let r1 = self.solve_game(&temp_i, numbers);
+                self.memory.insert((temp_i, numbers.clone()), r1);
+                return r1;
             }
 
         } else {
@@ -140,16 +122,22 @@ fn solve_game(instructions: &Vec<String>, numbers: &Vec<usize>) -> usize {
                 temp_i2.push(last_instr);
             }
             if last_char == '1' {
-                return solve_game(&temp_i2, &temp_n);
+                let r1 = self.solve_game(&temp_i2, &temp_n);
+                self.memory.insert((temp_i2, temp_n), r1);
+                return r1;
             }
-            return solve_game(&temp_i, numbers) + solve_game(&temp_i2, &temp_n);
+            let r1 = self.solve_game(&temp_i, numbers);
+            let r2 = self.solve_game(&temp_i2, &temp_n);
+            
+            self.memory.insert((temp_i, numbers.clone()), r1);
+            self.memory.insert((temp_i2, temp_n), r2);
+            return r1 + r2;
         }
-        println!("not sure why I ended up here");
     }
 
     1 as usize
 }
-
+}
 fn parse_input(input: &Vec<String>, repeat: usize) -> Vec<ConditionRecord> {
     let mut condition_records: Vec<ConditionRecord> = Vec::new();
 
@@ -170,7 +158,7 @@ fn parse_input(input: &Vec<String>, repeat: usize) -> Vec<ConditionRecord> {
         let final_numbers: Vec<usize> = numbers.iter().cycle().take(repeat * numbers.len()).map(|x| *x).collect();
         //println!("{:?}", instructions);
         //println!("{:?}", numbers);
-        condition_records.push(ConditionRecord{instructions, numbers: final_numbers})
+        condition_records.push(ConditionRecord{instructions, numbers: final_numbers, memory: HashMap::new()})
     }
     condition_records
 }
@@ -178,10 +166,12 @@ fn parse_input(input: &Vec<String>, repeat: usize) -> Vec<ConditionRecord> {
 fn logic_part_1 (input: &Vec<String>) -> u32 {
     let mut condition_records = parse_input(input, 1);
     let mut sum: usize = 0;
-    for mut line in &mut condition_records {
+    for mut line in condition_records {
         //line.eliminate_known();
         //println!("{:?}", line);
-        let number_solutions = solve_game(&line.instructions, &line.numbers);
+        let temp_i = line.instructions.clone();
+        let temp_n = line.numbers.clone();
+        let number_solutions = line.solve_game(&temp_i, &temp_n);
         //println!("Possible solutions: {}", number_solutions);
         sum += number_solutions;
     }
@@ -193,7 +183,9 @@ fn logic_part_2 (input: &Vec<String>) -> u64 {
     let mut sum: usize = 0;
     for mut line in &mut condition_records {
         println!("{:?}", line);
-        let number_solutions = solve_game(&line.instructions, &line.numbers);
+        let temp_i = line.instructions.clone();
+        let temp_n = line.numbers.clone();
+        let number_solutions = line.solve_game(&temp_i, &temp_n);
         println!("Possible solutions: {}", number_solutions);
         sum += number_solutions;
     }
@@ -228,13 +220,4 @@ fn vector_experiment() {
     //let temp: Vec<u32> = hello.iter().cycle().take(5 * hello.len()).collect();
     let foo: Vec<u32> = hello.into_iter().cycle().take(10).collect();
     println!("{:?}", foo);
-}
-
-#[test]
-fn test1() {
-    let foo = ConditionRecord { 
-        instructions: vec!["0001000001000000".to_string()],
-        numbers: vec![11, 1] };
-    let res = solve_game(&foo.instructions, &foo.numbers);
-    println!("{}", res);
 }
