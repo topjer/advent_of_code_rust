@@ -169,7 +169,6 @@ fn logic_part_2 (input: &Vec<String>) -> u32 {
     //println!("{:?}", game);
     game.run();
     println!("{:?}", game);
-    let mut inside_points: usize = 0;
     for row_index in 0..game.map_dimensions.0 {
         let mut inside = false;
         for column_index in 0..game.map_dimensions.1 {
@@ -195,7 +194,7 @@ fn debug_output(game: Game, inner_points: &Vec<(usize, usize)>) {
     for row_count in 0..game.map_dimensions.0 {
         let mut new_row: Vec<String> = Vec::new();
         for col_count in 0..game.map_dimensions.1 {
-            let mut c = String::new();
+            let mut c ;
             if game.loop_points.contains(&(row_count, col_count)) {
                 c = game.get_field((row_count, col_count));
                 match c.as_str() {
