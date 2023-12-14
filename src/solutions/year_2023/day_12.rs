@@ -1,3 +1,4 @@
+#![allow(unused_mut)]
 use crate::solutions::read_file;
 use std::collections::HashMap;
 
