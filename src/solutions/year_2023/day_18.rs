@@ -250,3 +250,15 @@ fn test_example2_input() {
     let result = logic_part_2(&lines);
     assert!(result == 952408144115.0);
 }
+
+#[test]
+fn dict_test() {
+    let mut foo: HashMap<usize, Vec<usize>> = HashMap::new();
+    let temp: Vec<usize> = Vec::new();
+    foo.insert(1, vec![10,20,30]);
+    foo.get_mut(&1).unwrap().pop().unwrap();
+    foo.get_mut(&1).unwrap().push(40);
+    foo.get_mut(&2).get_or_insert(&mut temp.clone()).push(50);
+    foo.entry(2).and_modify(|el| el.push(50)).or_insert(vec![50]);
+    println!("{:?}", foo);
+}

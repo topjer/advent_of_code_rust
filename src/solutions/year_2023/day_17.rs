@@ -39,7 +39,7 @@ struct Point {
     column: usize
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Path {
     total_heat: usize,
     last_step: Direction,
@@ -121,38 +121,48 @@ fn print_path(map: &Vec<Vec<usize>>, path: &Path) {
     }
 }
 
-fn logic_part_1 (input: &Vec<String>) -> u32 {
+fn logic_part_1 (input: &Vec<String>) -> usize {
+    //let mut iteration: usize = 0;
     let input_map = parse_input(input);
-    let mut paths_to_check: Vec<Path> = Vec::new();
+    //let mut paths_to_check: Vec<Path> = Vec::new();
+    let mut paths_to_check: HashMap<usize, Vec<Path>> = HashMap::new();
     let mut shortest_lenghts: HashMap<(Point, Direction, usize), usize> = HashMap::new();
+    let mut target_heat: usize = 1;
     let p1 = Point{row: 0, column: 1};
     let p2 = Point{row: 1, column: 0};
     let h1 = get_heat(&input_map, &p1);
     let h2 = get_heat(&input_map, &p2);
     shortest_lenghts.insert((p1, Direction::Right, 1), h1);
     shortest_lenghts.insert((p2, Direction::Down, 1), h1);
-    paths_to_check.push(Path{
+    paths_to_check.insert(h1, vec![Path{
         total_heat: h1,
         last_step: Direction::Right,
         current_position: p1,
         straights: 1,
         total_path: vec![Point{row:0, column: 0}, p1]
-    });
-    paths_to_check.push(Path{
+    }]);
+    paths_to_check.insert(h2, vec![Path{
         total_heat: h2,
         last_step: Direction::Down,
         current_position: p2,
         straights: 1,
         total_path: vec![Point{row:0, column: 0}, p2]
-    });
+    }]);
     while paths_to_check.len() > 0 {
-        let min_heat_index = paths_to_check.iter().position(|x| x.total_heat == paths_to_check.iter().map(|el| el.total_heat).min().unwrap()).unwrap();
-        let point_to_check = paths_to_check.remove(min_heat_index);
+        
+        if !paths_to_check.contains_key(&target_heat) || paths_to_check.get(&target_heat).unwrap().len() == 0 {
+            target_heat += 1;
+            continue;
+        }
+
+        let point_to_check = paths_to_check.get_mut(&target_heat).unwrap().pop().unwrap();
         if point_to_check.current_position == (Point{row: input_map.len()-1, column: input_map[0].len()-1}) {
             println!("{:?}", point_to_check);
             print_path(&input_map, &point_to_check);
-            break;
+            //println!("{:?}", point_to_check.total_heat);
+            return point_to_check.total_heat;
         }
+
         let possible_directions = possible_directions(&point_to_check);
         let allowed_points = allowed_points(&input_map, &point_to_check, possible_directions);
         for p in allowed_points {
@@ -163,31 +173,26 @@ fn logic_part_1 (input: &Vec<String>) -> u32 {
             let new_heat = point_to_check.total_heat + get_heat(&input_map, &p.1);
             if shortest_lenghts.contains_key(&(p.1, p.0, new_straights)) {
                 continue;
-                /*
-                if shortest_lenghts.get(&(p.1, p.0, new_straights)).unwrap() < &new_heat  { 
-                    continue;
-                } else {
-                    *shortest_lenghts.get_mut(&(p.1, p.0, new_straights)).unwrap() = new_heat;
-                } */
             } 
             else {
                 shortest_lenghts.insert((p.1, p.0, new_straights), new_heat);
             }
             let mut old_path = point_to_check.total_path.clone();
             old_path.push(p.1);
-            paths_to_check.push(
-                Path {
+            let new_path = Path {
                     total_heat: new_heat,
                     last_step: p.0,
                     straights: new_straights,
                     current_position: p.1,
                     total_path: old_path
-                }
-            )
+            };
+            paths_to_check.entry(new_heat).and_modify(|el|el.push(new_path.clone()
+            )).or_insert(vec![new_path.clone()]);
         }
     }
+    0
     //println!("{:?}", shortest_lenghts);
-    1
+    //1
 }
 
 fn logic_part_2 (input: &Vec<String>) -> u32 {
@@ -219,3 +224,4 @@ fn enum_test()  {
     println!("{:?}", v);
     println!("{:?}", foo);
     }
+
