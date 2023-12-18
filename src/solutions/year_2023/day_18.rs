@@ -1,4 +1,5 @@
 use num::traits::float;
+use std::i64;
 
 use crate::solutions::read_file;
 use std::collections::HashMap;
@@ -28,7 +29,30 @@ enum Direction {
 struct Instruction {
     direction: Direction,
     length: usize,
-    color: String
+}
+
+fn parse_input2(input: &Vec<String>) -> Vec<Instruction> {
+    let mut output: Vec<Instruction> = Vec::new();
+    input.iter().map(|l| l.split(' ').collect::<Vec<&str>>())
+        .for_each(|c| {
+            let mut d: Direction= Direction::Down;
+            //println!("{:?}", c);
+            let dir = c[2].chars().nth_back(1).unwrap().to_string().parse::<u32>().unwrap();
+            //println!("{:?}", dir);
+            let length: String = c[2].chars().skip(2).take(5).collect();
+            match dir {
+                0 => {d=Direction::Right},
+                2 => {d=Direction::Left},
+                1 => {d=Direction::Down},
+                3 => {d=Direction::Up},
+                _ => {println!("unknown direction")}
+            }
+            output.push(Instruction{
+                direction: d,
+                length: i64::from_str_radix(&length, 16).unwrap() as usize,
+            })
+        });
+    output
 }
 
 fn parse_input(input: &Vec<String>) -> Vec<Instruction> {
@@ -46,7 +70,6 @@ fn parse_input(input: &Vec<String>) -> Vec<Instruction> {
             output.push(Instruction{
                 direction: d,
                 length: c[1].parse::<usize>().unwrap(),
-                color: c[2].to_string()
             })
         });
     //println!("{:?}", output);
@@ -193,8 +216,24 @@ fn logic_part_1 (input: &Vec<String>) -> f32 {
     outcome
 } 
 
-fn logic_part_2 (input: &Vec<String>) -> u32 {
-    1
+fn logic_part_2 (input: &Vec<String>) -> f64 {
+    let instructions = parse_input2(input);
+    println!("{:?}", instructions);
+    let mut current_position: Point= Point{row: 0,column: 0};
+    let mut area: f64 = 0.0;
+    let mut cirumference: f64 = 0.0;
+    for instruction in instructions {
+        let next_point = find_endpoint(&current_position, &instruction.direction, &instruction.length);
+        area += 0.5 * (current_position.column + next_point.column) as f64 * (current_position.row - next_point.row) as f64;
+        cirumference += instruction.length as f64;
+        current_position = next_point;
+        println!("{:?}", current_position);
+    }
+    println!("Area: {}", area.abs());
+    println!("cirumference: {}", cirumference as f64 / 2.0);
+    let outcome = area.abs() + cirumference as f64 / 2.0 + 1.0;
+    println!("outcome: {}", outcome);
+    outcome
 }
 
 #[test]
@@ -207,7 +246,7 @@ fn test_example_input() {
 
 #[test]
 fn test_example2_input() {
-    let lines = read_file("./src/inputs/year_2023/day__unit");
+    let lines = read_file("./src/inputs/year_2023/day_18_unit");
     let result = logic_part_2(&lines);
-    assert!(result == 281);
+    assert!(result == 952408144115.0);
 }
