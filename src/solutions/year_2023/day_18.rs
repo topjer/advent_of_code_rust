@@ -1,3 +1,5 @@
+use num::traits::float;
+
 use crate::solutions::read_file;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -63,6 +65,22 @@ struct Dimensions {
     max_col: isize,
     min_col: isize
 }
+fn find_endpoint(pos: &Point, dir: &Direction, length: &usize) -> Point {
+    match dir {
+        Direction::Up => {
+            return Point{row: pos.row - *length as isize, column: pos.column};
+        },
+        Direction::Down => {
+            return Point{row: pos.row + *length as isize, column: pos.column};
+        },
+        Direction::Left => {
+            return Point{row: pos.row, column: pos.column - *length as isize};
+        },
+        Direction::Right => {
+            return Point{row: pos.row, column: pos.column + *length as isize};
+        },
+    }
+}
 
 fn find_points(pos: &Point, dir: &Direction, length: &usize) -> Vec<Point> {
     let mut output: Vec<Point> = Vec::new();
@@ -109,7 +127,7 @@ fn draw_map(map: &HashMap<Point, Direction>, dim: &Dimensions) {
     fs::write("./outputs/day_18", output).expect("Unable to write file");
 }
 
-fn count_points(map: &HashSet<Point>, dim: &Dimensions) -> usize {
+fn count_points(map: &HashSet<Point>, dim: &Dimensions) -> u32 {
     let mut inner_points: Vec<Point> = Vec::new();
     for r in dim.min_row..=dim.max_row {
         let mut streak: usize = 0;
@@ -152,42 +170,27 @@ fn count_points(map: &HashSet<Point>, dim: &Dimensions) -> usize {
         output.push('\n');
     }
     fs::write("./outputs/day_18_filled", output).expect("Unable to write file");
-    inner_points.len()
+    //inner_points.len();
+    1
 }
 
-fn logic_part_1 (input: &Vec<String>) -> u32 {
+fn logic_part_1 (input: &Vec<String>) -> f32 {
+    // shoelace formula + Picks formula
     let instructions = parse_input(input);
     let mut current_position: Point= Point{row: 0,column: 0};
-    let mut dug_out: HashSet<Point> = HashSet::new();
-    let mut min_row: isize= 0;
-    let mut min_col: isize= 0;
-    let mut max_row: isize= 0;
-    let mut max_col: isize= 0;
-    /* 
+    let mut area: f32 = 0.0;
+    let mut cirumference: usize = 0;
     for instruction in instructions {
-        let dug_out_points = find_points(
-            &current_position,
-            &instruction.direction,
-            &instruction.length
-        );
-        current_position = *dug_out_points.last().unwrap();
-        min_col = min_col.min(current_position.column);
-        min_row = min_row.min(current_position.row);
-        max_col = max_col.max(current_position.column);
-        max_row = max_row.max(current_position.row);
-        for point in dug_out_points {
-            dug_out.insert(point);
-        }
+        let next_point = find_endpoint(&current_position, &instruction.direction, &instruction.length);
+        area += 0.5 * (current_position.column + next_point.column) as f32 * (current_position.row - next_point.row) as f32;
+        cirumference += instruction.length;
+        current_position = next_point;
     }
-    let dim = Dimensions{
-        max_col: max_col,
-        min_col: min_col,
-        max_row: max_row,
-        min_row: min_row
-    };*/
-    //println!("{:?}", dug_out);
-    //draw_map(&dug_out, &dim);
-    count_points(&dug_out, &dim) as u32
+    println!("Area: {}", area);
+    println!("cirumference: {}", cirumference);
+    let outcome = area.abs() + cirumference as f32 / 2.0 + 1.0;
+    println!("outcome: {}", outcome);
+    outcome
 } 
 
 fn logic_part_2 (input: &Vec<String>) -> u32 {
@@ -198,7 +201,7 @@ fn logic_part_2 (input: &Vec<String>) -> u32 {
 fn test_example_input() {
     let lines = read_file("./src/inputs/year_2023/day_18_unit");
     let result = logic_part_1(&lines);
-    assert!(result == 62);
+    assert!(result == 62.0);
 }
 
 
