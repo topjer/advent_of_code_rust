@@ -18,6 +18,7 @@ mod day_16;
 */
 mod day_17;
 mod day_18;
+mod day_19;
 
 pub fn all_solutions() {
     println!("Year 2023");
@@ -38,6 +39,7 @@ pub fn all_solutions() {
     //day_14::solve();
     //day_15::solve();
     //day_16::solve();
-    day_17::solve();
+    //day_17::solve();
     //day_18::solve();
+    day_19::solve();
 }
