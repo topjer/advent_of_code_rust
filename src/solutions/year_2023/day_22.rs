@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use num::bigint;
 
@@ -141,12 +141,34 @@ fn logic_part_2 (input: &Vec<String>) -> usize {
             }
         }
     }
-    let mut number_falling_bricks: HashMap<usize, usize> = HashMap::new();
-    for brick in bricks {
-        sum += determine_falling_bricks(&brick.id, &is_supported_by, &supports, &mut number_falling_bricks);
+    for initial_brick in bricks {
+        //sum += determine_falling_bricks(&brick.id, &is_supported_by, &supports, &mut number_falling_bricks);
+        let mut bricks_to_check: VecDeque<usize> = VecDeque::from([initial_brick.id]);
+        let mut falling_bricks: HashSet<usize> = HashSet::new();
+        while !bricks_to_check.is_empty() {
+            let element = bricks_to_check.pop_front().unwrap();
+            // for every brick, check the brick it supports
+            if !supports.contains_key(&element) {
+                continue;
+            }
+            for el in supports.get(&element).unwrap() {
+                // if the intersection of the set of supporting bricks with the set of falling 
+                // bricks is equal to element, then it will also fall if element falls
+                let remaining_support = is_supported_by.get(el).unwrap().difference(&falling_bricks).collect::<HashSet<&usize>>();
+                //println!("{:?}", remaining_support);
+                //if remaining_support.is_empty() || remaining_support == HashSet::from([&element]) {
+                if remaining_support.is_subset(&HashSet::from([&element])) {
+                    falling_bricks.insert(*el);
+                    bricks_to_check.push_back(*el);
+                }
+                // investigae also all bricks that are supported 
+            }
+        }
+        sum += falling_bricks.len();
+        //println!("if brick: {:?} disintegrates, {} bricks will fall", initial_brick, falling_bricks.len());
     }
-    println!("{:?}", supports);
-    println!("{:?}", is_supported_by);
+    //println!("{:?}", supports);
+    //println!("{:?}", is_supported_by);
     sum 
 }
 
