@@ -46,11 +46,11 @@ impl Game {
             new_points.iter().for_each(|x|
                 if !self.points_to_check.contains(&(current_point.0+1, *x)) {
                     self.points_to_check.push_back((current_point.0 +1, *x))
-        });
-
+            });
             //println!("{:?}", self.reachable);
         }
-        println!("{:?}", at_certain_steps.len());
+        //println!("{:?}", at_certain_steps.len());
+        self.draw_map(&at_certain_steps);
         at_certain_steps.len()
     }
 
@@ -81,6 +81,24 @@ impl Game {
             }
             self.reachable.insert(point, output.clone());
             return output;
+        }
+    }
+    fn draw_map(&self, points: &HashSet<Point>) {
+        //println!("{:?}", points);
+        for (r_id, row) in self.map.iter().enumerate() {
+            for (c_id, column) in row.iter().enumerate() {
+                let p = Point{row: r_id, column: c_id};
+                if points.contains(&p) {
+                    print!("O");
+                } else {
+                    match self.get_value(p) {
+                        0 => print!("#"),
+                        1 => print!("."),
+                        _ => print!("#"),
+                    }
+                }
+            }
+            println!();
         }
     }
 
@@ -120,6 +138,11 @@ fn logic_part_1 (input: &Vec<String>, number_of_steps: usize) -> usize {
 }
 
 fn logic_part_2 (input: &Vec<String>) -> u32 {
+    for i in 0..=11 {
+        println!("{} steps", i);
+        let mut game = parse_input(input);
+        game.run(i);
+    }
     1
 }
 
@@ -133,7 +156,7 @@ fn test_example_input() {
 
 #[test]
 fn test_example2_input() {
-    let lines = read_file("./src/inputs/year_2023/day__unit");
+    let lines = read_file("./src/inputs/year_2023/day_21_unit");
     let result = logic_part_2(&lines);
     assert!(result == 281);
 }
